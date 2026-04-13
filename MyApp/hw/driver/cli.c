@@ -29,7 +29,7 @@ static void cliHelp (uint8_t argc, char* argv[]){
         cliPrintf("%s \r\n", cli_cmd_list[i].cmd_str);
 
     }
-    cliPrintf("---------------------------------------");
+    cliPrintf("---------------------------------------\r\n");
 
 }
 
@@ -98,12 +98,23 @@ void cliMain(){
     if(uartAvailable(0)>0){
         uint8_t rx_data = uartRead(0);
         if((rx_data=='\r') || (rx_data=='\n')){
+            cliPrintf("\r\n");
+
             cli_line_buf[cli_line_idx]='\0';
             cliParseArgs(cli_line_buf);
             cliRunCommand();
+
+            cliPrintf("CLI> ");
             cli_line_idx=0;
         }
+        else if(rx_data=='\b' || rx_data==127){
+            if(cli_line_idx>0){
+                cli_line_idx--;
+                cliPrintf("\b \b");
+            }
+        }
         else{
+            cliPrintf("%c", rx_data);
             cli_line_buf[cli_line_idx++]=rx_data;
             if(cli_line_idx>=CLI_LINE_BUF_MAX)
                 cli_line_idx=0;
