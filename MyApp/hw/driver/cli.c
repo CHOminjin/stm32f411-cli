@@ -31,6 +31,8 @@ static uint8_t cli_hist_count = 0;
 static uint8_t cli_hist_write = 0;
 static uint8_t cli_hist_depth = 0;
 
+
+
 static void cliHelp(uint8_t argc, char *argv[])
 {
   cliPrintf("-------------CLI Commands--------------");
