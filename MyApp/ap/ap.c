@@ -31,14 +31,12 @@ void cliLed(uint8_t argc, char** argv){
     }
 }
 
-void cliInfo(uint8_t argc, char** argv )
-{
-    if(argc==2 || strcmp(argv[1],"uptime")==0){
-     cliPrintf("System Uptime: %d ms \r\n", millis());  
-    }
-    else{
-        cliPrintf("Usage: info [uptime]\r\n");
-    }
+void cliInfo(uint8_t argc, char **argv) {
+    if (argc == 2 || strcmp(argv[1], "uptime") == 0) {
+      cliPrintf("System Uptime: %d ms \r\n", millis());
+  } else {
+    cliPrintf("Usage: info [uptime]\r\n");
+  }
 }
 void cliSys(uint8_t argc, char** argv){
     if((argc==2) && strcmp(argv[1],"reset")==0){
@@ -51,11 +49,9 @@ void cliSys(uint8_t argc, char** argv){
 void apInit(void){
     hwInit();
     cliAdd("led", cliLed);
-    cliAdd("info",cliInfo);
+    cliAdd("info", cliInfo);
     cliAdd("sys", cliSys);
-
 }
-
 
 void apMain(void){
 
