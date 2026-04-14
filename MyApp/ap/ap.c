@@ -40,12 +40,23 @@ void cliInfo(uint8_t argc, char** argv )
         cliPrintf("Usage: info [uptime]\r\n");
     }
 }
-
+void cliSys(uint8_t argc, char** argv){
+    if((argc==2) && strcmp(argv[1],"reset")==0){
+        NVIC_SystemReset();
+    }
+    else{
+        cliPrintf("Usage: sys [reset]\r\n");
+    }
+}
 void apInit(void){
     hwInit();
     cliAdd("led", cliLed);
     cliAdd("info",cliInfo);
+    cliAdd("sys", cliSys);
+
 }
+
+
 void apMain(void){
 
     uartPrintf(0, "Hello World!\r\n");
