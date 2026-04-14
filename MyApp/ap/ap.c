@@ -2,45 +2,95 @@
 #include "bsp.h"
 #include "cli.h"
 #include "hw_def.h"
+#include "main.h"
 #include "stm32f4xx_hal.h"
 #include "uart.h"
-#include "main.h"
+#include <ctype.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
-void cliLed(uint8_t argc, char **argv)
+// argv[1] : "read" "write"
+// argv[2] : pin "A5", "B12"
+void cliGpio(uint8_t argc, char **argv)
 {
-    if (argc == 2)
+  if (argc >= 3)
+  {
+    char port_char = tolower(argv[2][0]);
+    int pin_num = atoi(&argv[2][1]);
+
+    uint8_t port_idx = port_char - 'a';
+
+    if (strcmp(argv[1], "read") == 0)
     {
-        if (strcmp(argv[1], "on") == 0)
-        {
-            ledOn();
-            cliPrintf("LED ON\r\n");
-        }
-        else if (strcmp(argv[1], "off") == 0)
-        {
-            ledOff();
-            cliPrintf("LED OFF\r\n");
-        }
-        else if (strcmp(argv[1], "toggle") == 0)
-        {
-            ledToggle();
-            cliPrintf("LED TOGGLE\r\n");
-        }
-        else
-        {
-            cliPrintf("Invalid Command\r\n");
-        }
+      int8_t state = gpioExtRead(port_idx, pin_num);
+      if (state < 0)
+      {
+        cliPrintf("Invalid Port or Pin (ex:a5, b12)\r\n");
+      }
+      else
+      {
+        cliPrintf("GPIO %c%d=%d\r\n", toupper(port_char), pin_num, state);
+      }
+    }
+    else if (strcmp(argv[1], "write") == 0 && argc == 4)
+    {
+      int val = atoi(argv[3]);
+      if (gpioExtWrite(port_idx, pin_num, val) == true)
+      {
+        cliPrintf("GPIO %c%d Set to %d\r\n", toupper(port_char), pin_num, val);
+      }
+      else
+      {
+        cliPrintf("Invalid Port or Pin (ex:a5, b12)\r\n");
+      }
     }
     else
     {
-        cliPrintf("Usage: led [on|off|toggle]\r\n");
+      cliPrintf("Usage: gpio read [a~h][0~15]\r\n");
+      cliPrintf("       gpio write [a~h][0~15] [0|1]\r\n");
     }
+  }
+  else
+  {
+    cliPrintf("Usage: gpio read [a~h][0~15]\r\n");
+    cliPrintf("       gpio write [a~h][0~15] [0|1]\r\n");
+  }
+}
+
+void cliLed(uint8_t argc, char **argv)
+{
+  if (argc == 2)
+  {
+    if (strcmp(argv[1], "on") == 0)
+    {
+      ledOn();
+      cliPrintf("LED ON\r\n");
+    }
+    else if (strcmp(argv[1], "off") == 0)
+    {
+      ledOff();
+      cliPrintf("LED OFF\r\n");
+    }
+    else if (strcmp(argv[1], "toggle") == 0)
+    {
+      ledToggle();
+      cliPrintf("LED TOGGLE\r\n");
+    }
+    else
+    {
+      cliPrintf("Invalid Command\r\n");
+    }
+  }
+  else
+  {
+    cliPrintf("Usage: led [on|off|toggle]\r\n");
+  }
 }
 
 void cliInfo(uint8_t argc, char **argv)
 {
-  if(argc==1)
+  if (argc == 1)
   {
     cliPrintf("===============================");
     cliPrintf("  HW Model   :  STM32F411\r\n");
@@ -49,7 +99,7 @@ void cliInfo(uint8_t argc, char **argv)
     uint32_t uid0 = HAL_GetUIDw0();
     uint32_t uid1 = HAL_GetUIDw1();
     uint32_t uid2 = HAL_GetUIDw2();
-    uint32_t dev =  HAL_GetDEVID();
+    uint32_t dev = HAL_GetDEVID();
 
     cliPrintf("  Serial Num : %08x-%08x-%08x\r\n", uid0, uid1, uid2);
     cliPrintf("  DevicID    : %08x\r\n", dev);
@@ -68,29 +118,29 @@ void cliInfo(uint8_t argc, char **argv)
 }
 void cliSys(uint8_t argc, char **argv)
 {
-    if ((argc == 2) && strcmp(argv[1], "reset") == 0)
-    {
-        NVIC_SystemReset();
-    }
-    else
-    {
-        cliPrintf("Usage: sys [reset]\r\n");
-    }
+  if ((argc == 2) && strcmp(argv[1], "reset") == 0)
+  {
+    NVIC_SystemReset();
+  }
+  else
+  {
+    cliPrintf("Usage: sys [reset]\r\n");
+  }
 }
 void apInit(void)
 {
-    hwInit();
-    cliAdd("led", cliLed);
-    cliAdd("info", cliInfo);
-    cliAdd("sys", cliSys);
+  hwInit();
+  cliAdd("led", cliLed);
+  cliAdd("info", cliInfo);
+  cliAdd("sys", cliSys);
+  cliAdd("gpio", cliGpio);
 }
-
 void apMain(void)
 {
 
-    uartPrintf(0, "Hello World!\r\n");
-    while (1)
-    {
-        cliMain();
-    }
+  uartPrintf(0, "Hello World!\r\n");
+  while (1)
+  {
+    cliMain();
+  }
 }
