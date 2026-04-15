@@ -300,6 +300,5 @@ void apMain(void)
   while (1)
   {
     cliMain();
-    osDelay(1);
   }
 }

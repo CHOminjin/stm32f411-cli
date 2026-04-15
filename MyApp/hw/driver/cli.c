@@ -1,4 +1,5 @@
 #include "cli.h"
+#include "cmsis_os.h"
 #include "uart.h"
 #include <stdarg.h>
 #include <stdint.h>
@@ -41,10 +42,6 @@ typedef enum
 static cli_input_state_t input_state = CLI_STATE_NORMAL;
 
 // Refactoring CLI function
-static void cliRedrawTail(void)
-{
-  
-}
 static void handleEnterKey(void)
 {
   cliPrintf("\r\n");
@@ -141,32 +138,32 @@ static void processAnsiEscape(uint8_t rx_data)
 
 void cliMain(void)
 {
-  if (uartAvailable(0) == 0)
-    return;
-
-  uint8_t rx_data = uartRead(0);
-  if (input_state != CLI_STATE_NORMAL)
+  uint8_t rx_data;
+  if (uartReadBlock(0, &rx_data, osWaitForever) == true)
   {
-    processAnsiEscape(rx_data);
-    return;
-  }
-  switch (rx_data)
-  {
-  case 0x1B: // esc
-    input_state = CLI_STATE_ESC_RCVD;
-    break;
-  case '\r':
-  case '\n':
-    handleEnterKey();
-    break;
-  case '\b': // backspace
-  case 127:
-    handleBackspace();
-    break;
-  default:
-    if (32 <= rx_data && rx_data <= 126)
-      handleCharInsert(rx_data);
-    break;
+    if (input_state != CLI_STATE_NORMAL)
+    {
+      processAnsiEscape(rx_data);
+      return;
+    }
+    switch (rx_data)
+    {
+    case 0x1B: // esc
+      input_state = CLI_STATE_ESC_RCVD;
+      break;
+    case '\r':
+    case '\n':
+      handleEnterKey();
+      break;
+    case '\b': // backspace
+    case 127:
+      handleBackspace();
+      break;
+    default:
+      if (32 <= rx_data && rx_data <= 126)
+        handleCharInsert(rx_data);
+      break;
+    }
   }
 }
 
@@ -250,32 +247,4 @@ bool cliAdd(const char *cmd_str, void (*cmd_func)(uint8_t argc, char **argv))
   cli_cmd_count++;
 
   return true;
-}
-
-void cliMain_()
-{
-  if (uartAvailable(0) > 0)
-  {
-    uint8_t rx_data = uartRead(0);
-
-    if (esc_state == 0)
-    {
-      if (rx_data == 0x1B) // 27 esc
-      {
-        esc_state = 1;
-      }
-      else
-      {
-        if ((rx_data == '\r') || (rx_data == '\n'))
-        {
-        }
-        else if (rx_data == '\b' || rx_data == 127)
-        {
-        }
-        else
-        {
-        }
-      }
-    }
-  }
 }
