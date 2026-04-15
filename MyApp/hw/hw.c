@@ -1,3 +1,4 @@
+#include "driver/button.h"
 #include "hw_def.h"
 #include "hw.h"
 #include "cli.h"
@@ -10,5 +11,6 @@ void hwInit(void)
     ledInit();
     uartInit();
     cliInit();
+    buttonInit();
 
 }

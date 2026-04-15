@@ -12,6 +12,29 @@
 #include <string.h>
 #include <sys/types.h>
 
+// button on/off  => enable/disable
+void cliButton(uint8_t argc, char **argv)
+{
+  if (argc == 2)
+  {
+    if (strcmp(argv[1], "on") == 0)
+    {
+      buttonEnable(true);
+      cliPrintf("Button Interrupt Report: ON\r\n");
+    }
+    else if (strcmp(argv[1], "off") == 0)
+    {
+      buttonEnable(false);
+      cliPrintf("Button Interrupt Report: OFF\r\n");
+    }
+  }
+  else
+  {
+    cliPrintf("Usage: button [on/off]\r\n");
+    cliPrintf("Current Status: %s\r\n", buttonGetEnable() ? "ON" : "OFF");
+  }
+}
+
 static bool isSafeAddress(uint32_t addr)
 {
   // 1. f411 flash
@@ -46,7 +69,7 @@ void cliMd(uint8_t argc, char **argv)
       length = strtoul(argv[2], NULL, 0);
     }
 
-    for (uint32_t i = 0; i < length; i+=16)
+    for (uint32_t i = 0; i < length; i += 16)
     {
       cliPrintf("0x%08x : ", addr + i);
 
@@ -234,6 +257,7 @@ void apInit(void)
   cliAdd("sys", cliSys);
   cliAdd("gpio", cliGpio);
   cliAdd("md", cliMd);
+  cliAdd("button", cliButton);
 }
 void apMain(void)
 {
