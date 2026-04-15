@@ -1,6 +1,7 @@
 
 #include "bsp.h"
 #include "cli.h"
+#include "cmsis_os2.h"
 #include "hw_def.h"
 #include "main.h"
 #include "stm32f4xx_hal.h"
@@ -180,24 +181,40 @@ void cliGpio(uint8_t argc, char **argv)
   }
 }
 
+static uint32_t led_toggle_period = 0;
 void cliLed(uint8_t argc, char **argv)
 {
-  if (argc == 2)
+  if (argc >= 2)
   {
     if (strcmp(argv[1], "on") == 0)
     {
+      led_toggle_period=0;
       ledOn();
       cliPrintf("LED ON\r\n");
     }
     else if (strcmp(argv[1], "off") == 0)
     {
+      led_toggle_period=0;
       ledOff();
       cliPrintf("LED OFF\r\n");
     }
     else if (strcmp(argv[1], "toggle") == 0)
     {
-      ledToggle();
-      cliPrintf("LED TOGGLE\r\n");
+      if(argc==3){
+        led_toggle_period=atoi(argv[2]);
+        if(led_toggle_period>0){
+          cliPrintf("LED  Auto-Toggled!!\r\n");
+        }
+        else{
+          cliPrintf("Invalid Period\r\n");
+        }
+
+      }
+      else{
+        led_toggle_period=0;
+        ledToggle();
+        cliPrintf("LED TOGGLE\r\n");
+      }
     }
     else
     {
@@ -206,7 +223,9 @@ void cliLed(uint8_t argc, char **argv)
   }
   else
   {
-    cliPrintf("Usage: led [on|off|toggle]\r\n");
+    cliPrintf("Usage: led [on|off]\r\n");
+    cliPrintf("     : led toggle\r\n");
+    cliPrintf("     : led toggle [period]\r\n");
   }
 }
 
@@ -259,12 +278,28 @@ void apInit(void)
   cliAdd("md", cliMd);
   cliAdd("button", cliButton);
 }
+
+void ledSystemTask(void *argument)
+{
+  while (1)
+  {
+    if(led_toggle_period > 0){
+      ledToggle();
+      osDelay(led_toggle_period);
+    }
+    else{
+      osDelay(50);
+    }
+  }
+}
+
 void apMain(void)
 {
-
-  uartPrintf(0, "Hello World!\r\n");
+  
+  uartPrintf(0, "LED Task Started!!\r\n");
   while (1)
   {
     cliMain();
+    osDelay(1);
   }
 }
