@@ -4,7 +4,11 @@
 
 #include "def.h"
 #include "main.h"
-#include "hw.h"
-#include "my_gpio.h"
+#include "cmsis_os2.h"
+#include "adc.h"
+
+
+
+
 
 #endif //__HW_HW_DEF_H_

@@ -1,18 +1,5 @@
-
 #include "ap.h"
-#include "bsp.h"
-#include "cli.h"
-#include "cmsis_os2.h"
-#include "hw_def.h"
-#include "main.h"
-#include "stm32f4xx_hal.h"
-#include "uart.h"
 
-#include <ctype.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 
 // button on/off  => enable/disable
 void cliButton(uint8_t argc, char **argv)

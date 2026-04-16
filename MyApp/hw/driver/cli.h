@@ -1,8 +1,9 @@
 #ifndef __HW_DRIVER_CLI_H__
 #define __HW_DRIVER_CLI_H__
 
+
 #include "hw_def.h"
-#include <stdint.h>
+
 
 
 void cliInit();
