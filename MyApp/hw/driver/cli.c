@@ -1,10 +1,5 @@
 #include "cli.h"
-#include "cmsis_os.h"
-#include "uart.h"
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "ap.h"
 
 #define CLI_LINE_BUF_MAX 32
 #define CLI_CMD_LIST_MAX 32
@@ -40,6 +35,7 @@ typedef enum
 } cli_input_state_t;
 
 static cli_input_state_t input_state = CLI_STATE_NORMAL;
+static cli_callback_t ctrl_c_handler = NULL;
 
 // Refactoring CLI function
 static void handleEnterKey(void)
@@ -148,6 +144,12 @@ void cliMain(void)
     }
     switch (rx_data)
     {
+    case 0x03:
+      if (ctrl_c_handler != NULL)
+        ctrl_c_handler();
+      cliPrintf("^C \r\nCLI>");
+      cli_line_idx = 0;
+      break;
     case 0x1B: // esc
       input_state = CLI_STATE_ESC_RCVD;
       break;
@@ -183,11 +185,18 @@ static void cliClear(uint8_t argc, char *argv[])
 
 void cliInit()
 {
+  ctrl_c_handler = NULL;
   cli_cmd_count = 0;
   cli_line_idx = 0;
 
   cliAdd("help", cliHelp);
   cliAdd("cls", cliClear);
+  cliAdd("log", cliLog);
+}
+
+void cliSetCtrlHandler(cli_callback_t handler)
+{
+  ctrl_c_handler = handler;
 }
 
 void cliPrintf(const char *fmt, ...)

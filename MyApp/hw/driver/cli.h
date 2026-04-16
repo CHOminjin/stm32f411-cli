@@ -3,8 +3,11 @@
 
 
 #include "hw_def.h"
+#include "log.h"
 
+typedef void (*cli_callback_t)(void);
 
+void cliSetCtrlHandler(cli_callback_t handler);
 
 void cliInit();
 void cliMain();

@@ -1,5 +1,8 @@
 #include "ap.h"
+#include "led.h"
 #include "temp.h"
+
+
 
 
 // button on/off  => enable/disable
@@ -179,20 +182,20 @@ void cliLed(uint8_t argc, char **argv)
     {
       led_toggle_period=0;
       ledOn();
-      cliPrintf("LED ON\r\n");
+      LOG_INF("LED ON");
     }
     else if (strcmp(argv[1], "off") == 0)
     {
       led_toggle_period=0;
       ledOff();
-      cliPrintf("LED OFF\r\n");
+      LOG_INF("LED OFF");
     }
     else if (strcmp(argv[1], "toggle") == 0)
     {
       if(argc==3){
         led_toggle_period=atoi(argv[2]);
         if(led_toggle_period>0){
-          cliPrintf("LED  Auto-Toggled!!\r\n");
+          LOG_INF("LED  Auto-Toggled!!");
         }
         else{
           cliPrintf("Invalid Period\r\n");
@@ -202,7 +205,7 @@ void cliLed(uint8_t argc, char **argv)
       else{
         led_toggle_period=0;
         ledToggle();
-        cliPrintf("LED TOGGLE\r\n");
+        LOG_INF("LED TOGGLE");
       }
     }
     else
@@ -305,6 +308,7 @@ void ledSystemTask(void *argument)
   while (1)
   {
     if(led_toggle_period > 0){
+      LOG_DBG("LED Toggle!");
       ledToggle();
       osDelay(led_toggle_period);
     }
@@ -328,9 +332,20 @@ void tempSystemTask(void *argument){
   }
 }
 
+void apStopAutoTask(void){
+  led_toggle_period=0;
+  temp_read_period=0;
+  tempStopAuto();
+  ledOff();
+}
+
 void apInit(void)
 {
+  LOG_INF("Application Init... Started");
   hwInit();
+  cliSetCtrlHandler(apStopAutoTask);
+
+
   cliAdd("led", cliLed);
   cliAdd("info", cliInfo);
   cliAdd("sys", cliSys);
