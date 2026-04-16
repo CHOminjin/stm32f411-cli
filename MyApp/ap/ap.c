@@ -1,4 +1,5 @@
 
+#include "ap.h"
 #include "bsp.h"
 #include "cli.h"
 #include "cmsis_os2.h"
@@ -268,16 +269,42 @@ void cliSys(uint8_t argc, char **argv)
     cliPrintf("Usage: sys [reset]\r\n");
   }
 }
-void apInit(void)
-{
-  hwInit();
-  cliAdd("led", cliLed);
-  cliAdd("info", cliInfo);
-  cliAdd("sys", cliSys);
-  cliAdd("gpio", cliGpio);
-  cliAdd("md", cliMd);
-  cliAdd("button", cliButton);
+static uint32_t temp_read_period = 0;
+void cliTemp(uint8_t argc, char **argv){
+  if(argc==1)
+  {
+    temp_read_period=0;
+    float t=tempRead();
+    cliPrintf("Current Temp: %.2f *C\r\n", t);
+
+  }
+  else if(argc==2){
+    int period =atoi(argv[1]);
+    if(period>0){
+      temp_read_period=period;
+      cliPrintf("Temperature Auto-Read Started (%d ms)\r\n",period);
+    }
+    else{
+      cliPrintf("Invalid Period\r\n");
+    }
+  }
+  else{
+    cliPrintf("Usage: temp\r\n");
+    cliPrintf("       temp [period]\r\n");
+  }
 }
+
+void StartDefaultTask(void *argument)
+{
+  apInit();
+  for(;;)
+  {
+    apMain();
+  }
+  
+}
+
+
 
 void ledSystemTask(void *argument)
 {
@@ -293,6 +320,31 @@ void ledSystemTask(void *argument)
   }
 }
 
+void tempSystemTask(void *argument){
+  while(1){
+    if(temp_read_period>0){
+      float t=tempRead();
+      cliPrintf("Current Temp: %.2f *C\r\n", t);
+      osDelay(temp_read_period);
+    }
+    else{
+      osDelay(50);
+    }
+
+  }
+}
+
+void apInit(void)
+{
+  hwInit();
+  cliAdd("led", cliLed);
+  cliAdd("info", cliInfo);
+  cliAdd("sys", cliSys);
+  cliAdd("gpio", cliGpio);
+  cliAdd("md", cliMd);
+  cliAdd("button", cliButton);
+  cliAdd("temp", cliTemp);
+}
 void apMain(void)
 {
   
