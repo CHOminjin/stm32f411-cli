@@ -4,6 +4,7 @@
 #include "hw_def.h"
 #include "bsp.h"
 #include "hw.h"
+#include "monitor.h"
 
 
 void apInit(void);

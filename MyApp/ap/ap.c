@@ -1,6 +1,5 @@
 #include "ap.h"
-#include "led.h"
-#include "temp.h"
+
 
 
 
@@ -308,11 +307,24 @@ void ledSystemTask(void *argument)
   while (1)
   {
     if(led_toggle_period > 0){
-      LOG_DBG("LED Toggle!");
+      
       ledToggle();
+      bool led_state=ledGetStatus();
+
+      if(isMonitoringOn()){
+        monitorUpdateValue(ID_OUT_LED_STATE,TYPE_BOOL,&led_state);
+      }
+      else{
+        LOG_DBG("LED Toggle!");
+      }
+      
       osDelay(led_toggle_period);
     }
     else{
+      bool led_state=ledGetStatus();
+      if(isMonitoringOn()){
+        monitorUpdateValue(ID_OUT_LED_STATE,TYPE_BOOL,&led_state);
+      }
       osDelay(50);
     }
   }
@@ -321,8 +333,14 @@ void ledSystemTask(void *argument)
 void tempSystemTask(void *argument){
   while(1){
     if(temp_read_period>0){
+      tempStartAuto();
       float t=tempReadAuto();
-      cliPrintf("Current Temp: %.2f *C\r\n", t);
+      if(isMonitoringOn()){
+        monitorUpdateValue(ID_ENV_TEMP, TYPE_FLOAT, &t);
+      }
+      else{
+        cliPrintf("Current Temp: %.2f *C\r\n", t);
+      }
       osDelay(temp_read_period);
     }
     else{
@@ -331,18 +349,50 @@ void tempSystemTask(void *argument){
 
   }
 }
+static uint32_t monitor_period = 0;
+void monitorSystemTask(void *argument){
+  while(1){
+    if(isMonitoringOn()){
+      monitorSendPacket();
+    }
+    monitor_period=monitorGetPeriod();
+    osDelay(monitor_period);
+  }
+
+}
+
 
 void apStopAutoTask(void){
+  monitorOff();
   led_toggle_period=0;
   temp_read_period=0;
   tempStopAuto();
   ledOff();
 }
 
+void apSyncPeriods(uint32_t period){
+  if(period >0){
+    tempStopAuto();
+    temp_read_period=period;
+    led_toggle_period=period;
+    LOG_INF("Task Synchronized to %d ms", period);
+  }
+  else{
+    temp_read_period=0;
+    led_toggle_period=0;
+  }
+}
+
 void apInit(void)
 {
-  LOG_INF("Application Init... Started");
+  
   hwInit();
+  LOG_INF("Application Init... Started");
+
+  logInit();
+  monitorInit();
+ 
+  monitorSetSyncHandler(apSyncPeriods);
   cliSetCtrlHandler(apStopAutoTask);
 
 
