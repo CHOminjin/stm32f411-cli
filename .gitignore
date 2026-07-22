@@ -1,3 +1,23 @@
-build
+@'
+# 빌드 산출물
+build/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+CMakeUserPresets.json
+CMakeLists.txt.user
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+_deps/
+
+# CubeMX
 mx.scratch
 !.settings
+
+# 에디터
+compile_commands.json
+.idea/
+'@ | Set-Content -Encoding UTF8 .gitignore
